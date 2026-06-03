@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+container="${COPILOT_TOOLBOX_CONTAINER:-copilot-cli}"
+editor="${COPILOT_TOOLBOX_EDITOR:-${EDITOR:-vim}}"
+visual="${COPILOT_TOOLBOX_VISUAL:-${VISUAL:-$editor}}"
+term="${TERM:-xterm-256color}"
+
+if ! command -v toolbox >/dev/null 2>&1; then
+	printf 'error: required command not found: toolbox\n' >&2
+	exit 1
+fi
+
+# shellcheck disable=SC2016
+exec toolbox run --container "$container" \
+	env TERM="$term" EDITOR="$editor" VISUAL="$visual" \
+	bash -lc '
+		eval "$(/usr/local/bin/mise activate bash)"
+		cd "$1" || exit
+		shift
+		exec /usr/local/bin/copilot "$@"
+	' _ "$PWD" "$@"
